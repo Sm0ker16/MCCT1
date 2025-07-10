@@ -1,0 +1,811 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>คำนวณวัสดุการผลิต</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f4f8;
+            color: #334155;
+        }
+        .container {
+            max-width: 1000px;
+        }
+        input[type="number"]::-webkit-outer-spin-button,
+        input[type="number"]::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        input[type="number"] {
+            -moz-appearance: textfield;
+            text-align: center; /* Center align text in number inputs */
+        }
+        .input-group {
+            display: flex;
+            align-items: center;
+            border: 1px solid #d1d5db; /* border-gray-300 */
+            border-radius: 0.375rem; /* rounded-md */
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); /* shadow-sm */
+            width: fit-content; /* Make the input group only as wide as its content */
+            margin-left: auto; /* For centering */
+            margin-right: auto; /* For centering */
+        }
+        .input-group input {
+            width: 80px; /* Adjusted width for the number input field */
+            border: none;
+            padding: 0.5rem; /* p-2 */
+            outline: none;
+        }
+        .input-group button {
+            background-color: #e2e8f0; /* bg-gray-200 */
+            color: #4b5563; /* text-gray-700 */
+            padding: 0.5rem 0.75rem; /* py-2 px-3 */
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            border: none;
+        }
+        .input-group button:hover {
+            background-color: #cbd5e1; /* bg-gray-300 */
+        }
+        .input-group button:first-child {
+            border-top-left-radius: 0.375rem;
+            border-bottom-left-radius: 0.375rem;
+        }
+        .input-group button:last-child {
+            border-top-right-radius: 0.375rem;
+            border-bottom-right-radius: 0.375rem;
+        }
+        .recommendation {
+            color: #ef4444; /* Red color for recommendation */
+            font-weight: bold;
+        }
+        /* Styles for scroll-to-top button */
+        #scrollToTopBtn {
+            display: none; /* Hidden by default */
+            position: fixed; /* Fixed position */
+            bottom: 20px; /* Place at the bottom */
+            right: 20px; /* Place at the right */
+            z-index: 99; /* Ensure it's above other content */
+            border: none; /* Remove borders */
+            outline: none; /* Remove outline */
+            background-color: #4f46e5; /* Blue background */
+            color: white; /* White text */
+            cursor: pointer; /* Add a mouse pointer on hover */
+            padding: 15px; /* Some padding */
+            border-radius: 10px; /* Rounded corners */
+            font-size: 18px; /* Increase font size */
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: background-color 0.3s ease;
+        }
+
+        #scrollToTopBtn:hover {
+            background-color: #4338ca; /* Darker blue on hover */
+        }
+    </style>
+</head>
+<body class="p-4 sm:p-6 md:p-8">
+    <div class="container mx-auto bg-white p-6 sm:p-8 rounded-xl shadow-lg">
+        <h1 class="text-3xl sm:text-4xl font-bold text-center mb-8 text-blue-700">คำนวณวัสดุการผลิต</h1>
+
+        <!-- Navigation Buttons for Product Categories -->
+        <div class="mb-8 p-4 bg-gray-100 rounded-lg shadow-inner">
+            <h2 class="text-xl font-semibold mb-4 text-gray-800 text-center">ไปยังหมวดหมู่สินค้า:</h2>
+            <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                <button onclick="scrollToSection('vertical-stand-section')" class="bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-2 px-3 rounded-lg shadow transition duration-300 ease-in-out text-sm text-center">ขาตั้งสื่อแนวตั้ง</button>
+                <button onclick="scrollToSection('horizontal-stand-section')" class="bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-2 px-3 rounded-lg shadow transition duration-300 ease-in-out text-sm text-center">ขาตั้งสื่อแนวนอน</button>
+                <button onclick="scrollToSection('flip-chart-a4-section')" class="bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-2 px-3 rounded-lg shadow transition duration-300 ease-in-out text-sm text-center">ภาพพลิก A4</button>
+                <button onclick="scrollToSection('flip-chart-a3-section')" class="bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-2 px-3 rounded-lg shadow transition duration-300 ease-in-out text-sm text-center">ภาพพลิก A3</button>
+                <button onclick="scrollToSection('toothbrush-holder-first-gen-section')" class="bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-2 px-3 rounded-lg shadow transition duration-300 ease-in-out text-sm text-center">ชั้นแขวนแก้วรุ่นแรก</button>
+                <button onclick="scrollToSection('toothbrush-holder-single-slot-section')" class="bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-2 px-3 rounded-lg shadow transition duration-300 ease-in-out text-sm text-center">ชั้นแขวนแก้วช่องเดียว</button>
+                <button onclick="scrollToSection('clothes-hanger-section')" class="bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-2 px-3 rounded-lg shadow transition duration-300 ease-in-out text-sm text-center">ที่แขวนผ้า</button>
+                <button onclick="scrollToSection('existing-materials-section')" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-3 rounded-lg shadow transition duration-300 ease-in-out text-sm text-center">วัสดุที่มีอยู่</button>
+            </div>
+        </div>
+
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+
+            <!-- Product Category: ขาตั้งสื่อแนวตั้ง (Vertical Media Stand) -->
+            <div id="vertical-stand-section" class="p-5 bg-blue-50 rounded-lg shadow-md">
+                <h2 class="text-xl font-semibold mb-4 text-blue-600">1. ขาตั้งสื่อแนวตั้ง</h2>
+                <div class="mb-3">
+                    <label for="verticalStandWithGrating" class="block text-sm font-medium text-gray-700">จำนวนที่พร้อมตะแกรง:</label>
+                    <div class="input-group mt-1">
+                        <button onclick="decrement('verticalStandWithGrating')">-</button>
+                        <input type="number" id="verticalStandWithGrating" value="0" min="0">
+                        <button onclick="increment('verticalStandWithGrating')">+</button>
+                    </div>
+                </div>
+                <div>
+                    <label for="verticalStandNoGrating" class="block text-sm font-medium text-gray-700">จำนวนที่ไม่รับตะแกรง:</label>
+                    <div class="input-group mt-1">
+                        <button onclick="decrement('verticalStandNoGrating')">-</button>
+                        <input type="number" id="verticalStandNoGrating" value="0" min="0">
+                        <button onclick="increment('verticalStandNoGrating')">+</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Product Category: ขาตั้งสื่อแนวนอน (Horizontal Media Stand) -->
+            <div id="horizontal-stand-section" class="p-5 bg-blue-50 rounded-lg shadow-md">
+                <h2 class="text-xl font-semibold mb-4 text-blue-600">2. ขาตั้งสื่อแนวนอน</h2>
+                <div class="mb-3">
+                    <label for="horizontalStandWithGrating" class="block text-sm font-medium text-gray-700">จำนวนที่พร้อมตะแกรง:</label>
+                    <div class="input-group mt-1">
+                        <button onclick="decrement('horizontalStandWithGrating')">-</button>
+                        <input type="number" id="horizontalStandWithGrating" value="0" min="0">
+                        <button onclick="increment('horizontalStandWithGrating')">+</button>
+                    </div>
+                </div>
+                <div>
+                    <label for="horizontalStandNoGrating" class="block text-sm font-medium text-gray-700">จำนวนที่ไม่รับตะแกรง:</label>
+                    <div class="input-group mt-1">
+                        <button onclick="decrement('horizontalStandNoGrating')">-</button>
+                        <input type="number" id="horizontalStandNoGrating" value="0" min="0">
+                        <button onclick="increment('horizontalStandNoGrating')">+</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Product Category: ภาพพลิก A4 (Flip Chart A4) -->
+            <div id="flip-chart-a4-section" class="p-5 bg-blue-50 rounded-lg shadow-md">
+                <h2 class="text-xl font-semibold mb-4 text-blue-600">3. ภาพพลิก A4</h2>
+                <div>
+                    <label for="flipChartA4" class="block text-sm font-medium text-gray-700">จำนวน:</label>
+                    <div class="input-group mt-1">
+                        <button onclick="decrement('flipChartA4')">-</button>
+                        <input type="number" id="flipChartA4" value="0" min="0">
+                        <button onclick="increment('flipChartA4')">+</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Product Category: ภาพพลิก A3 (Flip Chart A3) -->
+            <div id="flip-chart-a3-section" class="p-5 bg-blue-50 rounded-lg shadow-md">
+                <h2 class="text-xl font-semibold mb-4 text-blue-600">4. ภาพพลิก A3</h2>
+                <div>
+                    <label for="flipChartA3" class="block text-sm font-medium text-gray-700">จำนวน:</label>
+                    <div class="input-group mt-1">
+                        <button onclick="decrement('flipChartA3')">-</button>
+                        <input type="number" id="flipChartA3" value="0" min="0">
+                        <button onclick="increment('flipChartA3')">+</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Product Category: ชั้นแขวนแก้วและแปรงฟันรุ่นแรก (First Gen Toothbrush and Glass Holder) -->
+            <div id="toothbrush-holder-first-gen-section" class="p-5 bg-blue-50 rounded-lg shadow-md md:col-span-2 lg:col-span-1">
+                <h2 class="text-xl font-semibold mb-4 text-blue-600">5. ชั้นแขวนแก้วและแปรงฟัน<br><u>รุ่นแรก</u></h2>
+                <div class="mb-3">
+                    <label for="toothbrushHolder15" class="block text-sm font-medium text-gray-700">จำนวนสำหรับ 15 คน:</label>
+                    <div class="input-group mt-1">
+                        <button onclick="decrement('toothbrushHolder15')">-</button>
+                        <input type="number" id="toothbrushHolder15" value="0" min="0">
+                        <button onclick="increment('toothbrushHolder15')">+</button>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label for="toothbrushHolder20" class="block text-sm font-medium text-gray-700">จำนวนสำหรับ 20 คน:</label>
+                    <div class="input-group mt-1">
+                        <button onclick="decrement('toothbrushHolder20')">-</button>
+                        <input type="number" id="toothbrushHolder20" value="0" min="0">
+                        <button onclick="increment('toothbrushHolder20')">+</button>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label for="toothbrushHolder25" class="block text-sm font-medium text-gray-700">จำนวนสำหรับ 25 คน:</label>
+                    <div class="input-group mt-1">
+                        <button onclick="decrement('toothbrushHolder25')">-</button>
+                        <input type="number" id="toothbrushHolder25" value="0" min="0">
+                        <button onclick="increment('toothbrushHolder25')">+</button>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label for="toothbrushHolder30" class="block text-sm font-medium text-gray-700">จำนวนสำหรับ 30 คน:</label>
+                    <div class="input-group mt-1">
+                        <button onclick="decrement('toothbrushHolder30')">-</button>
+                        <input type="number" id="toothbrushHolder30" value="0" min="0">
+                        <button onclick="increment('toothbrushHolder30')">+</button>
+                    </div>
+                </div>
+                <div>
+                    <label for="toothbrushHolder36" class="block text-sm font-medium text-gray-700">จำนวนสำหรับ 36 คน:</label>
+                    <div class="input-group mt-1">
+                        <button onclick="decrement('toothbrushHolder36')">-</button>
+                        <input type="number" id="toothbrushHolder36" value="0" min="0">
+                        <button onclick="increment('toothbrushHolder36')">+</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Product Category: ชั้นแขวนแก้วและแปรงฟันรุ่นช่องเดียว (Single Slot Toothbrush and Glass Holder) -->
+            <div id="toothbrush-holder-single-slot-section" class="p-5 bg-blue-50 rounded-lg shadow-md md:col-span-2 lg:col-span-1">
+                <h2 class="text-xl font-semibold mb-4 text-blue-600">6. ชั้นแขวนแก้วและแปรงฟัน<br><u>รุ่นช่องเดียว</u></h2>
+                <div class="mb-3">
+                    <label for="singleSlotHolder10" class="block text-sm font-medium text-gray-700">จำนวนสำหรับ 10 คน:</label>
+                    <div class="input-group mt-1">
+                        <button onclick="decrement('singleSlotHolder10')">-</button>
+                        <input type="number" id="singleSlotHolder10" value="0" min="0">
+                        <button onclick="increment('singleSlotHolder10')">+</button>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label for="singleSlotHolder15" class="block text-sm font-medium text-gray-700">จำนวนสำหรับ 15 คน:</label>
+                    <div class="input-group mt-1">
+                        <button onclick="decrement('singleSlotHolder15')">-</button>
+                        <input type="number" id="singleSlotHolder15" value="0" min="0">
+                        <button onclick="increment('singleSlotHolder15')">+</button>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label for="singleSlotHolder20" class="block text-sm font-medium text-gray-700">จำนวนสำหรับ 20 คน:</label>
+                    <div class="input-group mt-1">
+                        <button onclick="decrement('singleSlotHolder20')">-</button>
+                        <input type="number" id="singleSlotHolder20" value="0" min="0">
+                        <button onclick="increment('singleSlotHolder20')">+</button>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label for="singleSlotHolder25" class="block text-sm font-medium text-gray-700">จำนวนสำหรับ 25 คน:</label>
+                    <div class="input-group mt-1">
+                        <button onclick="decrement('singleSlotHolder25')">-</button>
+                        <input type="number" id="singleSlotHolder25" value="0" min="0">
+                        <button onclick="increment('singleSlotHolder25')">+</button>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label for="singleSlotHolder30" class="block text-sm font-medium text-gray-700">จำนวนสำหรับ 30 คน:</label>
+                    <div class="input-group mt-1">
+                        <button onclick="decrement('singleSlotHolder30')">-</button>
+                        <input type="number" id="singleSlotHolder30" value="0" min="0">
+                        <button onclick="increment('singleSlotHolder30')">+</button>
+                    </div>
+                </div>
+                <div>
+                    <label for="singleSlotHolder35" class="block text-sm font-medium text-gray-700">จำนวนสำหรับ 35 คน:</label>
+                    <div class="input-group mt-1">
+                        <button onclick="decrement('singleSlotHolder35')">-</button>
+                        <input type="number" id="singleSlotHolder35" value="0" min="0">
+                        <button onclick="increment('singleSlotHolder35')">+</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Product Category: ที่แขวนผ้า (Clothes Hanger) -->
+            <div id="clothes-hanger-section" class="p-5 bg-blue-50 rounded-lg shadow-md">
+                <h2 class="text-xl font-semibold mb-4 text-blue-600">7. ที่แขวนผ้า</h2>
+                <div>
+                    <label for="clothesHanger" class="block text-sm font-medium text-gray-700">จำนวน:</label>
+                    <div class="input-group mt-1">
+                        <button onclick="decrement('clothesHanger')">-</button>
+                        <input type="number" id="clothesHanger" value="0" min="0">
+                        <button onclick="increment('clothesHanger')">+</button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <h2 id="existing-materials-section" class="text-2xl sm:text-3xl font-bold text-center mb-6 text-green-700">วัสดุที่มีอยู่</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+            <div class="p-5 bg-green-50 rounded-lg shadow-md">
+                <h3 class="text-lg font-semibold mb-3 text-green-600">ตะแกรง</h3>
+                <label for="existing_ตะแกรง_pieces" class="block text-sm font-medium text-gray-700">จำนวนชิ้นที่มีอยู่:</label>
+                <div class="input-group mt-1">
+                    <button onclick="decrement('existing_ตะแกรง_pieces')">-</button>
+                    <input type="number" id="existing_ตะแกรง_pieces" value="0" min="0">
+                    <button onclick="increment('existing_ตะแกรง_pieces')">+</button>
+                </div>
+            </div>
+            <div class="p-5 bg-green-50 rounded-lg shadow-md">
+                <h3 class="text-lg font-semibold mb-3 text-green-600">ข้องอ 90 องศา 1/2 นิ้ว</h3>
+                <label for="existing_ข้องอ 90 องศา 1/2 นิ้ว_pieces" class="block text-sm font-medium text-gray-700">จำนวนชิ้นที่มีอยู่:</label>
+                <div class="input-group mt-1">
+                    <button onclick="decrement('existing_ข้องอ 90 องศา 1/2 นิ้ว_pieces')">-</button>
+                    <input type="number" id="existing_ข้องอ 90 องศา 1/2 นิ้ว_pieces" value="0" min="0">
+                    <button onclick="increment('existing_ข้องอ 90 องศา 1/2 นิ้ว_pieces')">+</button>
+                </div>
+                <label for="existing_ข้องอ 90 องศา 1/2 นิ้ว_boxes" class="block text-sm font-medium text-gray-700 mt-2">จำนวนกล่องที่มีอยู่ (100 ชิ้น/กล่อง):</label>
+                <div class="input-group mt-1">
+                    <button onclick="decrement('existing_ข้องอ 90 องศา 1/2 นิ้ว_boxes')">-</button>
+                    <input type="number" id="existing_ข้องอ 90 องศา 1/2 นิ้ว_boxes" value="0" min="0">
+                    <button onclick="increment('existing_ข้องอ 90 องศา 1/2 นิ้ว_boxes')">+</button>
+                </div>
+            </div>
+            <div class="p-5 bg-green-50 rounded-lg shadow-md">
+                <h3 class="text-lg font-semibold mb-3 text-green-600">ข้องอ 90 องศา 3/4 นิ้ว</h3>
+                <label for="existing_ข้องอ 90 องศา 3/4 นิ้ว_pieces" class="block text-sm font-medium text-gray-700">จำนวนชิ้นที่มีอยู่:</label>
+                <div class="input-group mt-1">
+                    <button onclick="decrement('existing_ข้องอ 90 องศา 3/4 นิ้ว_pieces')">-</button>
+                    <input type="number" id="existing_ข้องอ 90 องศา 3/4 นิ้ว_pieces" value="0" min="0">
+                    <button onclick="increment('existing_ข้องอ 90 องศา 3/4 นิ้ว_pieces')">+</button>
+                </div>
+                <label for="existing_ข้องอ 90 องศา 3/4 นิ้ว_boxes" class="block text-sm font-medium text-gray-700 mt-2">จำนวนกล่องที่มีอยู่ (50 ชิ้น/กล่อง):</label>
+                <div class="input-group mt-1">
+                    <button onclick="decrement('existing_ข้องอ 90 องศา 3/4 นิ้ว_boxes')">-</button>
+                    <input type="number" id="existing_ข้องอ 90 องศา 3/4 นิ้ว_boxes" value="0" min="0">
+                    <button onclick="increment('existing_ข้องอ 90 องศา 3/4 นิ้ว_boxes')">+</button>
+                </div>
+            </div>
+            <div class="p-5 bg-green-50 rounded-lg shadow-md">
+                <h3 class="text-lg font-semibold mb-3 text-green-600">สามทาง 1/2 นิ้ว</h3>
+                <label for="existing_สามทาง 1/2 นิ้ว_pieces" class="block text-sm font-medium text-gray-700">จำนวนชิ้นที่มีอยู่:</label>
+                <div class="input-group mt-1">
+                    <button onclick="decrement('existing_สามทาง 1/2 นิ้ว_pieces')">-</button>
+                    <input type="number" id="existing_สามทาง 1/2 นิ้ว_pieces" value="0" min="0">
+                    <button onclick="increment('existing_สามทาง 1/2 นิ้ว_pieces')">+</button>
+                </div>
+                <label for="existing_สามทาง 1/2 นิ้ว_boxes" class="block text-sm font-medium text-gray-700 mt-2">จำนวนกล่องที่มีอยู่ (50 ชิ้น/กล่อง):</label>
+                <div class="input-group mt-1">
+                    <button onclick="decrement('existing_สามทาง 1/2 นิ้ว_boxes')">-</button>
+                    <input type="number" id="existing_สามทาง 1/2 นิ้ว_boxes" value="0" min="0">
+                    <button onclick="increment('existing_สามทาง 1/2 นิ้ว_boxes')">+</button>
+                </div>
+            </div>
+            <div class="p-5 bg-green-50 rounded-lg shadow-md">
+                <h3 class="text-lg font-semibold mb-3 text-green-600">สามทาง 3/4 นิ้ว</h3>
+                <label for="existing_สามทาง 3/4 นิ้ว_pieces" class="block text-sm font-medium text-gray-700">จำนวนชิ้นที่มีอยู่:</label>
+                <div class="input-group mt-1">
+                    <button onclick="decrement('existing_สามทาง 3/4 นิ้ว_pieces')">-</button>
+                    <input type="number" id="existing_สามทาง 3/4 นิ้ว_pieces" value="0" min="0">
+                    <button onclick="increment('existing_สามทาง 3/4 นิ้ว_pieces')">+</button>
+                </div>
+                <label for="existing_สามทาง 3/4 นิ้ว_boxes" class="block text-sm font-medium text-gray-700 mt-2">จำนวนกล่องที่มีอยู่ (30 ชิ้น/กล่อง):</label>
+                <div class="input-group mt-1">
+                    <button onclick="decrement('existing_สามทาง 3/4 นิ้ว_boxes')">-</button>
+                    <input type="number" id="existing_สามทาง 3/4 นิ้ว_boxes" value="0" min="0">
+                    <button onclick="increment('existing_สามทาง 3/4 นิ้ว_boxes')">+</button>
+                </div>
+            </div>
+            <div class="p-5 bg-green-50 rounded-lg shadow-md">
+                <h3 class="text-lg font-semibold mb-3 text-green-600">ท่อขาว 1/2 นิ้ว</h3>
+                <label for="existing_ท่อขาว 1/2 นิ้ว_pieces" class="block text-sm font-medium text-gray-700">จำนวนเส้นที่มีอยู่:</label>
+                <div class="input-group mt-1">
+                    <button onclick="decrement('existing_ท่อขาว 1/2 นิ้ว_pieces')">-</button>
+                    <input type="number" id="existing_ท่อขาว 1/2 นิ้ว_pieces" value="0" min="0">
+                    <button onclick="increment('existing_ท่อขาว 1/2 นิ้ว_pieces')">+</button>
+                </div>
+                <label for="existing_ท่อขาว 1/2 นิ้ว_bundles" class="block text-sm font-medium text-gray-700 mt-2">จำนวนมัดที่มีอยู่ (25 เส้น/มัด):</label>
+                <div class="input-group mt-1">
+                    <button onclick="decrement('existing_ท่อขาว 1/2 นิ้ว_bundles')">-</button>
+                    <input type="number" id="existing_ท่อขาว 1/2 นิ้ว_bundles" value="0" min="0">
+                    <button onclick="increment('existing_ท่อขาว 1/2 นิ้ว_bundles')">+</button>
+                </div>
+            </div>
+            <div class="p-5 bg-green-50 rounded-lg shadow-md">
+                <h3 class="text-lg font-semibold mb-3 text-green-600">ท่อขาว 3/4 นิ้ว</h3>
+                <label for="existing_ท่อขาว 3/4 นิ้ว_pieces" class="block text-sm font-medium text-gray-700">จำนวนเส้นที่มีอยู่:</label>
+                <div class="input-group mt-1">
+                    <button onclick="decrement('existing_ท่อขาว 3/4 นิ้ว_pieces')">-</button>
+                    <input type="number" id="existing_ท่อขาว 3/4 นิ้ว_pieces" value="0" min="0">
+                    <button onclick="increment('existing_ท่อขาว 3/4 นิ้ว_pieces')">+</button>
+                </div>
+                <label for="existing_ท่อขาว 3/4 นิ้ว_bundles" class="block text-sm font-medium text-gray-700 mt-2">จำนวนมัดที่มีอยู่ (25 เส้น/มัด):</label>
+                <div class="input-group mt-1">
+                    <button onclick="decrement('existing_ท่อขาว 3/4 นิ้ว_bundles')">-</button>
+                    <input type="number" id="existing_ท่อขาว 3/4 นิ้ว_bundles" value="0" min="0">
+                    <button onclick="increment('existing_ท่อขาว 3/4 นิ้ว_bundles')">+</button>
+                </div>
+            </div>
+            <div class="p-5 bg-green-50 rounded-lg shadow-md">
+                <h3 class="text-lg font-semibold mb-3 text-green-600">ท่อเหลือง 1/2 นิ้ว</h3>
+                <label for="existing_ท่อเหลือง 1/2 นิ้ว_pieces" class="block text-sm font-medium text-gray-700">จำนวนเส้นที่มีอยู่:</label>
+                <div class="input-group mt-1">
+                    <button onclick="decrement('existing_ท่อเหลือง 1/2 นิ้ว_pieces')">-</button>
+                    <input type="number" id="existing_ท่อเหลือง 1/2 นิ้ว_pieces" value="0" min="0">
+                    <button onclick="increment('existing_ท่อเหลือง 1/2 นิ้ว_pieces')">+</button>
+                </div>
+                <label for="existing_ท่อเหลือง 1/2 นิ้ว_bundles" class="block text-sm font-medium text-gray-700 mt-2">จำนวนมัดที่มีอยู่ (25 เส้น/มัด):</label>
+                <div class="input-group mt-1">
+                    <button onclick="decrement('existing_ท่อเหลือง 1/2 นิ้ว_bundles')">-</button>
+                    <input type="number" id="existing_ท่อเหลือง 1/2 นิ้ว_bundles" value="0" min="0">
+                    <button onclick="increment('existing_ท่อเหลือง 1/2 นิ้ว_bundles')">+</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex flex-col sm:flex-row gap-4">
+            <button onclick="calculateMaterials()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg shadow-lg transition duration-300 ease-in-out transform hover:scale-105">
+                คำนวณวัสดุ
+            </button>
+        </div>
+
+        <div id="results" class="mt-8 p-6 bg-green-50 rounded-lg shadow-md hidden">
+            <h2 class="text-2xl font-bold text-green-700 mb-4">สรุปวัสดุที่ต้องใช้ทั้งหมด:</h2>
+            <div id="materialList" class="text-lg text-gray-800">
+                <!-- Materials will be displayed here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Scroll to Top Button -->
+    <button onclick="scrollToTop()" id="scrollToTopBtn" title="กลับขึ้นบนสุด">↑</button>
+
+    <script>
+        // Define material requirements for each product type
+        const materialData = {
+            // ขาตั้งสื่อแนวตั้ง (65x135 ซม.) - Vertical Media Stand
+            'verticalStandWithGrating': {
+                'ตะแกรง': 1,
+                'ข้องอ 90 องศา 1/2 นิ้ว': 6,
+                'สามทาง 1/2 นิ้ว': 4,
+                'ท่อขาว 1/2 นิ้ว': 1.55
+            },
+            'verticalStandNoGrating': {
+                'ข้องอ 90 องศา 1/2 นิ้ว': 6,
+                'สามทาง 1/2 นิ้ว': 4,
+                'ท่อขาว 1/2 นิ้ว': 1.55
+            },
+            // ขาตั้งสื่อแนวนอน (125x110 ซม.) - Horizontal Media Stand
+            'horizontalStandWithGrating': {
+                'ตะแกรง': 1,
+                'ข้องอ 90 องศา 1/2 นิ้ว': 6,
+                'สามทาง 1/2 นิ้ว': 4,
+                'ท่อขาว 1/2 นิ้ว': 1.79
+            },
+            'horizontalStandNoGrating': {
+                'ข้องอ 90 องศา 1/2 นิ้ว': 6,
+                'สามทาง 1/2 นิ้ว': 4,
+                'ท่อขาว 1/2 นิ้ว': 1.79
+            },
+            // ภาพพลิก A4 - Flip Chart A4
+            'flipChartA4': {
+                'ข้องอ 90 องศา 1/2 นิ้ว': 6,
+                'สามทาง 1/2 นิ้ว': 2,
+                'ท่อขาว 1/2 นิ้ว': 0.59
+            },
+            // ภาพพลิก A3 - Flip Chart A3
+            'flipChartA3': {
+                'ข้องอ 90 องศา 1/2 นิ้ว': 6,
+                'สามทาง 1/2 นิ้ว': 2,
+                'ท่อขาว 1/2 นิ้ว': 0.79
+            },
+            // ชั้นแขวนแก้วและแปรงฟันรุ่นแรก - First Gen Toothbrush and Glass Holder
+            'toothbrushHolder15': {
+                'ท่อเหลือง 1/2 นิ้ว': 0.75,
+                'ท่อขาว 3/4 นิ้ว': 1.15,
+                'ข้องอ 90 องศา 3/4 นิ้ว': 6,
+                'สามทาง 3/4 นิ้ว': 6
+            },
+            'toothbrushHolder20': {
+                'ท่อเหลือง 1/2 นิ้ว': 1,
+                'ท่อขาว 3/4 นิ้ว': 1.55,
+                'ข้องอ 90 องศา 3/4 นิ้ว': 6,
+                'สามทาง 3/4 นิ้ว': 8
+            },
+            'toothbrushHolder25': {
+                'ท่อเหลือง 1/2 นิ้ว': 1.25,
+                'ท่อขาว 3/4 นิ้ว': 1.94,
+                'ข้องอ 90 องศา 3/4 นิ้ว': 6,
+                'สามทาง 3/4 นิ้ว': 10
+            },
+            'toothbrushHolder30': {
+                'ท่อเหลือง 1/2 นิ้ว': 1.5,
+                'ท่อขาว 3/4 นิ้ว': 2.14,
+                'ข้องอ 90 องศา 3/4 นิ้ว': 6,
+                'สามทาง 3/4 นิ้ว': 10
+            },
+            'toothbrushHolder36': {
+                'ท่อเหลือง 1/2 นิ้ว': 1.8,
+                'ท่อขาว 3/4 นิ้ว': 2.57,
+                'ข้องอ 90 องศา 3/4 นิ้ว': 6,
+                'สามทาง 3/4 นิ้ว': 12
+            },
+            // ชั้นแขวนแก้วและแปรงฟันรุ่นช่องเดียว - Single Slot Toothbrush and Glass Holder
+            'singleSlotHolder10': {
+                'ท่อขาว 1/2 นิ้ว': 1,
+                'ข้องอ 90 องศา 1/2 นิ้ว': 6,
+                'สามทาง 1/2 นิ้ว': 14
+            },
+            'singleSlotHolder15': {
+                'ท่อขาว 1/2 นิ้ว': 1.38,
+                'ข้องอ 90 องศา 1/2 นิ้ว': 6,
+                'สามทาง 1/2 นิ้ว': 21
+            },
+            'singleSlotHolder20': {
+                'ท่อขาว 1/2 นิ้ว': 1.76,
+                'ข้องอ 90 องศา 1/2 นิ้ว': 6,
+                'สามทาง 1/2 นิ้ว': 28
+            },
+            'singleSlotHolder25': {
+                'ท่อขาว 1/2 นิ้ว': 1.66,
+                'ข้องอ 90 องศา 1/2 นิ้ว': 6,
+                'สามทาง 1/2 นิ้ว': 35
+            },
+            'singleSlotHolder30': {
+                'ท่อขาว 1/2 นิ้ว': 2.42,
+                'ข้องอ 90 องศา 1/2 นิ้ว': 6,
+                'สามทาง 1/2 นิ้ว': 40
+            },
+            'singleSlotHolder35': {
+                'ท่อขาว 1/2 นิ้ว': 2.67,
+                'ข้องอ 90 องศา 1/2 นิ้ว': 6,
+                'สามทาง 1/2 นิ้ว': 45
+            },
+            // ที่แขวนผ้า - Clothes Hanger
+            'clothesHanger': {
+                'ท่อขาว 1/2 นิ้ว': 1.01,
+                'ข้องอ 90 องศา 1/2 นิ้ว': 6,
+                'สามทาง 1/2 นิ้ว': 4
+            }
+        };
+
+        // Define packaging sizes for bulk ordering
+        const packagingSizes = {
+            'ข้องอ 90 องศา 1/2 นิ้ว': { unit: 'ชิ้น', boxSize: 100, boxName: 'กล่อง' },
+            'ข้องอ 90 องศา 3/4 นิ้ว': { unit: 'ชิ้น', boxSize: 50, boxName: 'กล่อง' },
+            'สามทาง 1/2 นิ้ว': { unit: 'ชิ้น', boxSize: 50, boxName: 'กล่อง' },
+            'สามทาง 3/4 นิ้ว': { unit: 'ชิ้น', boxSize: 30, boxName: 'กล่อง' },
+            'ท่อขาว 1/2 นิ้ว': { unit: 'เส้น', boxSize: 25, boxName: 'มัด' },
+            'ท่อขาว 3/4 นิ้ว': { unit: 'เส้น', boxSize: 25, boxName: 'มัด' },
+            'ท่อเหลือง 1/2 นิ้ว': { unit: 'เส้น', boxSize: 25, boxName: 'มัด' }
+        };
+
+        // Function to get input value safely
+        function getInputValue(id) {
+            const inputElement = document.getElementById(id);
+            // Ensure the value is a number and non-negative
+            return Math.max(0, parseFloat(inputElement.value) || 0);
+        }
+
+        // Function to increment input value
+        function increment(id) {
+            const inputElement = document.getElementById(id);
+            if (inputElement) {
+                inputElement.value = Math.max(0, parseInt(inputElement.value || 0) + 1);
+            }
+        }
+
+        // Function to decrement input value
+        function decrement(id) {
+            const inputElement = document.getElementById(id);
+            if (inputElement) {
+                inputElement.value = Math.max(0, parseInt(inputElement.value || 0) - 1);
+            }
+        }
+
+        // Function to scroll to a specific section
+        function scrollToSection(sectionId) {
+            const section = document.getElementById(sectionId);
+            if (section) {
+                section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
+
+        // Function to scroll to the top of the page
+        function scrollToTop() {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // Show/hide scroll to top button based on scroll position
+        window.onscroll = function() {
+            const scrollToTopBtn = document.getElementById("scrollToTopBtn");
+            if (document.body.scrollTop > 20 || document.documentElement.scrollTop > 20) {
+                scrollToTopBtn.style.display = "block";
+            } else {
+                scrollToTopBtn.style.display = "none";
+            }
+        };
+
+        // Main calculation function
+        function calculateMaterials() {
+            // Initialize total materials object (represents total needed for all products)
+            const totalMaterials = {};
+
+            // Function to add materials to the total needed
+            function addMaterials(materials, quantity) {
+                for (const material in materials) {
+                    if (materials.hasOwnProperty(material)) {
+                        totalMaterials[material] = (totalMaterials[material] || 0) + (materials[material] * quantity);
+                    }
+                }
+            }
+
+            // Get quantities for each product type
+            const quantities = {
+                'verticalStandWithGrating': getInputValue('verticalStandWithGrating'),
+                'verticalStandNoGrating': getInputValue('verticalStandNoGrating'),
+                'horizontalStandWithGrating': getInputValue('horizontalStandWithGrating'),
+                'horizontalStandNoGrating': getInputValue('horizontalStandNoGrating'),
+                'flipChartA4': getInputValue('flipChartA4'),
+                'flipChartA3': getInputValue('flipChartA3'),
+                'toothbrushHolder15': getInputValue('toothbrushHolder15'),
+                'toothbrushHolder20': getInputValue('toothbrushHolder20'),
+                'toothbrushHolder25': getInputValue('toothbrushHolder25'),
+                'toothbrushHolder30': getInputValue('toothbrushHolder30'),
+                'toothbrushHolder36': getInputValue('toothbrushHolder36'),
+                'singleSlotHolder10': getInputValue('singleSlotHolder10'),
+                'singleSlotHolder15': getInputValue('singleSlotHolder15'),
+                'singleSlotHolder20': getInputValue('singleSlotHolder20'),
+                'singleSlotHolder25': getInputValue('singleSlotHolder25'),
+                'singleSlotHolder30': getInputValue('singleSlotHolder30'),
+                'singleSlotHolder35': getInputValue('singleSlotHolder35'),
+                'clothesHanger': getInputValue('clothesHanger')
+            };
+
+            // Calculate total materials based on quantities
+            for (const productKey in quantities) {
+                if (quantities.hasOwnProperty(productKey) && quantities[productKey] > 0) {
+                    const materialsForProduct = materialData[productKey];
+                    if (materialsForProduct) {
+                        addMaterials(materialsForProduct, quantities[productKey]);
+                    }
+                }
+            }
+
+            // Get existing materials (pieces/lines + boxes/bundles)
+            const existingMaterials = {};
+            
+            // Collect all unique material names from product requirements and existing stock inputs
+            const allUniqueMaterialNames = new Set();
+            Object.values(materialData).forEach(productMaterials => {
+                Object.keys(productMaterials).forEach(material => allUniqueMaterialNames.add(material));
+            });
+            // Add material names from existing stock inputs
+            const existingMaterialInputNames = [
+                'ตะแกรง',
+                'ข้องอ 90 องศา 1/2 นิ้ว', 'ข้องอ 90 องศา 3/4 นิ้ว',
+                'สามทาง 1/2 นิ้ว', 'สามทาง 3/4 นิ้ว',
+                'ท่อขาว 1/2 นิ้ว', 'ท่อขาว 3/4 นิ้ว', 'ท่อเหลือง 1/2 นิ้ว'
+            ];
+            existingMaterialInputNames.forEach(materialName => allUniqueMaterialNames.add(materialName));
+
+
+            // Calculate total existing stock for each material
+            allUniqueMaterialNames.forEach(materialName => {
+                let totalExisting = 0;
+                const piecesId = `existing_${materialName}_pieces`;
+                const pieces = getInputValue(piecesId);
+                totalExisting += pieces;
+
+                // Check if it's a bulk item and has a bulk input field
+                let materialPackagingInfo = packagingSizes[materialName];
+                if (materialPackagingInfo) {
+                    const bulkId = `existing_${materialName}_${materialPackagingInfo.boxName === 'กล่อง' ? 'boxes' : 'bundles'}`;
+                    const bulk = getInputValue(bulkId);
+                    totalExisting += (bulk * materialPackagingInfo.boxSize);
+                }
+                existingMaterials[materialName] = totalExisting;
+            });
+
+
+            // Store original total needed before subtracting existing (for recommendation logic)
+            const originalTotalNeeded = {};
+            for (const material in totalMaterials) {
+                if (totalMaterials.hasOwnProperty(material)) {
+                    originalTotalNeeded[material] = totalMaterials[material];
+                }
+            }
+
+            // Calculate 'net needed' by subtracting existing materials from total needed
+            const netNeededMaterials = {};
+            for (const material in totalMaterials) {
+                if (totalMaterials.hasOwnProperty(material)) {
+                    const existingQty = existingMaterials[material] || 0;
+                    netNeededMaterials[material] = Math.max(0, totalMaterials[material] - existingQty);
+                }
+            }
+
+            // Prepare lists for display
+            const materialsToOrderDisplay = [];
+            const lowStockRecommendations = [];
+
+            // Helper function to determine unit
+            function getUnit(materialName) {
+                if (materialName.includes('ท่อ')) {
+                    return 'เส้น';
+                } else if (materialName.includes('ตะแกรง') || materialName.includes('ข้องอ') || materialName.includes('สามทาง')) {
+                    return 'ชิ้น';
+                }
+                return ''; // Default empty unit
+            }
+
+            // Function to sort material names for display
+            const sortMaterialNamesForDisplay = (materialNamesArray) => {
+                return materialNamesArray.sort((a, b) => {
+                    const getCategoryIndex = (name) => {
+                        if (name.includes('ตะแกรง')) return 0;
+                        if (name.includes('ข้องอ')) return 1;
+                        if (name.includes('สามทาง')) return 2;
+                        if (name.includes('ท่อ')) return 3;
+                        return 99; // For any other materials not explicitly listed
+                    };
+
+                    const indexA = getCategoryIndex(a);
+                    const indexB = getCategoryIndex(b);
+
+                    if (indexA === indexB) {
+                        return a.localeCompare(b, 'th'); // Sort alphabetically within the same category
+                    }
+                    return indexA - indexB; // Sort by category order
+                });
+            };
+
+            // Populate materialsToOrderDisplay and lowStockRecommendations
+            const allMaterialsConsidered = Array.from(allUniqueMaterialNames); // Use the set of all unique material names
+
+            sortMaterialNamesForDisplay(allMaterialsConsidered).forEach(material => {
+                const quantityNeededForProduction = originalTotalNeeded[material] || 0;
+                const actualExistingStock = existingMaterials[material] || 0;
+                const netNeeded = Math.ceil(netNeededMaterials[material] || 0); // Rounded up net needed
+
+                let materialPackagingInfo = packagingSizes[material];
+
+                // Case 1: Material needs to be ordered for current production
+                if (netNeeded > 0) {
+                    let displayString = `${material}: ${netNeeded} ${getUnit(material)}`;
+                    if (materialPackagingInfo) {
+                        const orderQuantity = Math.ceil(netNeeded / materialPackagingInfo.boxSize);
+                        displayString += ` (ต้องสั่ง ${orderQuantity} ${materialPackagingInfo.boxName})`;
+                    }
+                    materialsToOrderDisplay.push({ materialName: material, display: displayString });
+                } 
+                // Case 2: Material does NOT need to be ordered for current production, but existing stock is low
+                else {
+                    if (materialPackagingInfo) { // Only apply recommendation for bulk items
+                        const remainingStockAfterProduction = actualExistingStock - quantityNeededForProduction;
+                        let thresholdPercentage = 0; // Default to 0, meaning no recommendation unless specified
+
+                        if (material.includes('ท่อ')) {
+                            thresholdPercentage = 0.5; // Less than 50% for pipes
+                        } else if (material.includes('ข้องอ') || material.includes('สามทาง')) {
+                            thresholdPercentage = 1.0; // Less than 100% for elbows and tees
+                        }
+
+                        if (remainingStockAfterProduction > 0 && remainingStockAfterProduction < (thresholdPercentage * materialPackagingInfo.boxSize)) {
+                            lowStockRecommendations.push({
+                                materialName: material,
+                                display: `${material}: เหลือ ${remainingStockAfterProduction} ${getUnit(material)} (แนะนำสั่ง 1 ${materialPackagingInfo.boxName} เพื่อสำรอง)`
+                            });
+                        }
+                    }
+                }
+            });
+
+            // Display results
+            const resultsDiv = document.getElementById('results');
+            const materialListDiv = document.getElementById('materialList');
+            materialListDiv.innerHTML = ''; // Clear previous results
+
+            if (materialsToOrderDisplay.length === 0 && lowStockRecommendations.length === 0) {
+                materialListDiv.innerHTML = '<p class="text-gray-600">ไม่ต้องสั่งวัสดุเพิ่มเติม</p>';
+            } else {
+                // Display materials to order
+                if (materialsToOrderDisplay.length > 0) {
+                    const orderHeader = document.createElement('h3');
+                    orderHeader.classList.add('text-xl', 'font-semibold', 'text-green-700', 'mb-2');
+                    orderHeader.textContent = 'วัสดุที่ต้องสั่งซื้อเพิ่มเติม:';
+                    materialListDiv.appendChild(orderHeader);
+
+                    materialsToOrderDisplay.forEach(item => {
+                        const listItem = document.createElement('p');
+                        listItem.textContent = item.display;
+                        materialListDiv.appendChild(listItem);
+                    });
+                }
+
+                // Display low stock recommendations
+                if (lowStockRecommendations.length > 0) {
+                    const recommendationHeader = document.createElement('h3');
+                    recommendationHeader.classList.add('text-xl', 'font-semibold', 'text-red-600', 'mt-6', 'mb-2');
+                    recommendationHeader.textContent = 'วัสดุที่เหลือน้อยกว่า (แนะนำให้สั่งสำรอง):';
+                    materialListDiv.appendChild(recommendationHeader);
+
+                    lowStockRecommendations.forEach(item => {
+                        const listItem = document.createElement('p');
+                        listItem.textContent = item.display;
+                        listItem.classList.add('recommendation'); // Add class for styling
+                        materialListDiv.appendChild(listItem);
+                    });
+                }
+            }
+            resultsDiv.classList.remove('hidden');
+        }
+    </script>
+</body>
+</html>
